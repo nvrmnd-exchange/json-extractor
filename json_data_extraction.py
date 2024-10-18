@@ -201,15 +201,31 @@ class PolicyExtractor:
 
         extracted_info = {}
         try:
-            input_data = {"input_text": chunks, "target_prompt": prompt}
+            # Join chunks into a single string for input
+            input_data = {"input_text": "\n".join(chunks), "target_prompt": prompt}
             input_data_json = json.dumps(input_data)
+            
+            # Call the model to generate content
             response = self.model.generate_content(input_data_json)
-            extracted_info = response.text
+
+            # Check if response is valid JSON and parse it
+            if response and isinstance(response, str):
+                try:
+                    extracted_info = json.loads(response)
+                except json.JSONDecodeError:
+                    print("Failed to decode JSON response:", response)
+                    extracted_info = {"error": "Invalid JSON response"}
+            else:
+                extracted_info = {"error": "Empty response from model"}
+                
         except Exception as e:
             print("Error during extraction:", e)
-            extracted_info = "Extraction failed"
-        
+            extracted_info = {"error": str(e)}  # Return the error as part of the response
+
         return extracted_info
+
+
+
 
 
     
