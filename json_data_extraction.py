@@ -24,7 +24,7 @@ class PolicyExtractor:
     def get_text_from_document(self, uploaded_files):
         text = ""
         for file in uploaded_files:
-            if file.name.lower().endswith((".pdf", ".docx", ".txt", ".pptx", ".csv")):
+            if file.name.lower().endswith((".pdf", ".docx", ".txt", ".pptx", ".csv", ".json")):
                 try:
                     if file.name.lower().endswith(".pdf"):
                         pdf_reader = PdfReader(file)
@@ -44,6 +44,9 @@ class PolicyExtractor:
                     elif file.name.lower().endswith('.csv'):
                         df = pd.read_csv(file)
                         text += df.to_csv(index=False)
+                    elif file.name.lower().endswith('.json'):
+                        json_data = json.load(file)
+                        text  += json.dumps(json_data, indent=4) 
                 except Exception as e:
                     st.error(f"Error processing {file.name}: {e}")
         return text
@@ -64,98 +67,131 @@ class PolicyExtractor:
     def extract_policy_information(self, chunks):
         """Extract specific insurance policy information from the uploaded document content."""
         prompt = """
-        Extract the relevant information from the property damage document and return it in the following structured JSON format. 
+        Extract all relevant information from the uploaded property damage document and return it in the following structured JSON format. 
 
         Follow these rules:
         1. If any field is missing, leave it empty.
         2. Capture all nested data accurately.
         3. Ensure numerical fields are correctly parsed (e.g., year, phone number, policy limits).
-        4. For 'categories' and 'subcategories', maintain the structure as shown.
+        4. For 'categories', 'subcategories', and 'questions maintain the structure as shown.
 
         Use the following JSON template:
 
         {
-        "claim_information": {
-            "claim_number": "",
-            "claim_type_id": "",
-            "created_by_id": "",
-            "customer_id": "",
-            "id": "",
-            "line_of_business_id": "",
-            "status": "",
-            "synched": 0
-        },
-        "property_information": {
-            "claim_id": "",
-            "construction_type": "",
-            "created_at": "",
-            "created_by_id": "",
-            "id": "",
-            "location_id": "",
-            "number_of_stories": 0,
-            "owner_name": "",
-            "property_type": "",
-            "roof_type": "",
-            "synched": 0,
-            "year_of_built": 0
-        },
-        "customer_information": {
-            "created_at": "",
-            "created_by_id": "",
-            "email": "",
-            "first_name": "",
-            "id": "",
-            "last_name": "",
-            "location_address": "",
-            "location_city": "",
-            "location_id": "",
-            "location_pincode": "",
-            "location_state": "",
-            "phone_number": "",
-            "updated_at": ""
-        },
-        "insurance_policy_information": {
-            "claim_id": "",
-            "coverage_type": "",
-            "created_by_id": "",
-            "deductible": "",
-            "id": "",
-            "insurance_carrier": "",
-            "policy_holder_name": "",
-            "policy_limits": "",
-            "policy_number": "",
-            "synched": 0
-        },
-        "damage_information": {
-            "cause_of_loss": "",
-            "claim_id": "",
-            "created_by_id": "",
-            "date_of_loss": "",
-            "description": "",
-            "id": "",
-            "synched": 0
-        },
-        "categories": [
-            {
-            "name": "",
-            "is_interior": false,
-            "priority": 0,
-            "subcategories": [
+            "inspections": [
                 {
-                "title": "",
-                "description": "",
-                "questions": [
-                    {
-                    "title": "",
-                    "answer_type": "",
-                    "response": ""
+                    "id": 1,
+                    "name": "",
+                    "claim_information": {
+                        "claim_number": "",
+                        "claim_type_id": "",
+                        "created_by_id": "",
+                        "customer_id": "",
+                        "id": "",
+                        "line_of_business_id": "",
+                        "status": "",
+                        "synched": 0
+                    },
+                    "property_information": {
+                        "claim_id": "",
+                        "construction_type": "",
+                        "created_at": "",
+                        "created_by_id": "",
+                        "id": "",
+                        "location_id": "",
+                        "number_of_stories": 0,
+                        "owner_name": "",
+                        "property_type": "",
+                        "roof_type": "",
+                        "synched": 0,
+                        "year_of_built": 0
+                    },
+                    "customer_information": {
+                        "created_at": "",
+                        "created_by_id": "",
+                        "email": "",
+                        "first_name": "",
+                        "id": "",
+                        "last_name": "",
+                        "location_address": "",
+                        "location_city": "",
+                        "location_id": "",
+                        "location_pincode": "",
+                        "location_state": "",
+                        "phone_number": "",
+                        "updated_at": ""
+                    },
+                    "insurance_policy_information": {
+                        "claim_id": "",
+                        "coverage_type": "",
+                        "created_by_id": "",
+                        "deductible": "",
+                        "id": "",
+                        "insurance_carrier": "",
+                        "policy_holder_name": "",
+                        "policy_limits": "",
+                        "policy_number": "",
+                        "synched": 0
+                    },
+                    "damage_information": {
+                        "cause_of_loss": "",
+                        "claim_id": "",
+                        "created_by_id": "",
+                        "date_of_loss": "",
+                        "description": "",
+                        "id": "",
+                        "synched": 0
+                    },
+                    "claim_type": {
+                        "id": 1,
+                        "name": ""
+                    },
+                    "categories": [
+                        {
+                        "id": 1
+                        "name": "",
+                        "is_interior": false,
+                        "priority": 0,
+                        "subcategories": [
+                            {
+                            "id": 1,
+                            "title": "",
+                            "description": "",
+                            "helptext": "",
+                            "priority": 1,
+                            "questions": [
+                                {
+                                "id": 1,
+                                "title": "",
+                                "description": "",
+                                "helptext": "",
+                                "priority": 1,
+                                "required": true
+                                "answer_type": "",
+                                "photos": true,
+                                "videos": true,
+                                "photos_360": true,
+                                "photos_response_collection": [
+                                    {}
+                                ],
+                                "docs": false,
+                                "video_response_collection": [],
+                                "360_photo_response_collection": [],
+                                "notes": true,
+                                "applicable": true,
+                                "is_additional_questions": false
+                                "response": ""
+                                }
+                            ]
+                            }
+                        ]
+                        }
+                    ]
                     }
-                ]
                 }
             ]
-            }
-        ]
         }
+        You do not need to adhere to any predefined format. Simply use the document structure and content to organize the output appropriately.
         Please extract relevant data from the document into this structure.
         """
         extracted_info = {}
@@ -189,7 +225,8 @@ class PolicyExtractor:
         """Main function to run the policy extraction application."""
         st.set_page_config("Insurance Policy JSON Generator")
         st.header("Generate JSON from Insurance Policy Documents:")
-        uploaded_files = st.file_uploader("Upload Policy Documents", type=["pdf", "docx", "txt", "pptx"], accept_multiple_files=True)
+        uploaded_files = st.file_uploader("Upload Policy Documents", type=["pdf", "docx", "txt", "pptx", "csv", "json"], accept_multiple_files=True)
+
         if uploaded_files:
             st.write("Generating JSON...")
             raw_text = self.get_text_from_document(uploaded_files)
@@ -199,6 +236,12 @@ class PolicyExtractor:
             st.write("Generated JSON:")
             st.code(policy_info_json, language='json')
             # st.json(policy_info_dict)
+            st.download_button(
+                label="Download JSON",
+                data=policy_info_json,
+                file_name='policy_info.json',
+                mime='application/json'
+            )
 
 if __name__ == "__main__":
     app = PolicyExtractor()
