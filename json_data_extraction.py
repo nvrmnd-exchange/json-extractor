@@ -62,61 +62,102 @@ class PolicyExtractor:
             return []
 
     def extract_policy_information(self, chunks):
-        """Extract policy information from the text."""
-        prompt = """Analyze the uploaded document and extract key information into the following structured JSON format:
+        """Extract specific insurance policy information from the uploaded document content."""
+        prompt = """
+        Extract the relevant information from the property damage document and return it in the following structured JSON format. 
+
+        Follow these rules:
+        1. If any field is missing, leave it empty.
+        2. Capture all nested data accurately.
+        3. Ensure numerical fields are correctly parsed (e.g., year, phone number, policy limits).
+        4. For 'categories' and 'subcategories', maintain the structure as shown.
+
+        Use the following JSON template:
+
         {
-            "inspections": [
+        "claim_information": {
+            "claim_number": "",
+            "claim_type_id": "",
+            "created_by_id": "",
+            "customer_id": "",
+            "id": "",
+            "line_of_business_id": "",
+            "status": "",
+            "synched": 0
+        },
+        "property_information": {
+            "claim_id": "",
+            "construction_type": "",
+            "created_at": "",
+            "created_by_id": "",
+            "id": "",
+            "location_id": "",
+            "number_of_stories": 0,
+            "owner_name": "",
+            "property_type": "",
+            "roof_type": "",
+            "synched": 0,
+            "year_of_built": 0
+        },
+        "customer_information": {
+            "created_at": "",
+            "created_by_id": "",
+            "email": "",
+            "first_name": "",
+            "id": "",
+            "last_name": "",
+            "location_address": "",
+            "location_city": "",
+            "location_id": "",
+            "location_pincode": "",
+            "location_state": "",
+            "phone_number": "",
+            "updated_at": ""
+        },
+        "insurance_policy_information": {
+            "claim_id": "",
+            "coverage_type": "",
+            "created_by_id": "",
+            "deductible": "",
+            "id": "",
+            "insurance_carrier": "",
+            "policy_holder_name": "",
+            "policy_limits": "",
+            "policy_number": "",
+            "synched": 0
+        },
+        "damage_information": {
+            "cause_of_loss": "",
+            "claim_id": "",
+            "created_by_id": "",
+            "date_of_loss": "",
+            "description": "",
+            "id": "",
+            "synched": 0
+        },
+        "categories": [
+            {
+            "name": "",
+            "is_interior": false,
+            "priority": 0,
+            "subcategories": [
                 {
-                    "id": "auto_generated_id",
-                    "name": "Flood",
-                    "claim_type": {
-                        "id": 1,
-                        "name": "Flood"
-                    },
-                    "categories": [
-                        {
-                            "id": "auto_generated_id",
-                            "name": "string",
-                            "is_interior": "boolean",
-                            "priority": 1,
-                            "applicable": "boolean",
-                            "subcategory_collection": [
-                                {
-                                    "id": 1,
-                                    "title": "string",
-                                    "description": "string",
-                                    "helptext": "string",
-                                    "priority": 1,
-                                    "questions_collection": [
-                                        {
-                                            "id": 1,
-                                            "title": "Has the front elevation water damage been captured?",
-                                            "description": "Ensure that the front elevation's water damage due to flooding has been recorded.",
-                                            "helptext": "Capture any visible water damage to the front elevation caused by flooding.",
-                                            "priority": 1,
-                                            "required": true,
-                                            "answer_type": "boolean",
-                                            "photos": true,
-                                            "videos": true,
-                                            "photos_360": true,
-                                            "photos_response_collection": [{}],
-                                            "docs": false,
-                                            "video_response_collection": [],
-                                            "360_photo_response_collection": [],
-                                            "notes": true,
-                                            "applicable": true
-                                        }
-                                    ]
-                                }
-                            ],
-                            "additional_questions": [],
-                            "floor_collection": []
-                        }
-                    ]
+                "title": "",
+                "description": "",
+                "questions": [
+                    {
+                    "title": "",
+                    "answer_type": "",
+                    "response": ""
+                    }
+                ]
                 }
             ]
-        }"""
-
+            }
+        ]
+        }
+        Please extract relevant data from the document into this structure.
+        """
         extracted_info = {}
         try:
             combined_input = f"{prompt}\n\n" + '\n'.join(chunks)
@@ -130,12 +171,9 @@ class PolicyExtractor:
             if response.candidates:
                 generated_content = response.candidates[0].content.parts[0].text.strip() 
                 generated_content = generated_content.replace("```json", "").replace("```", "").strip() 
-                # print("Cleaned Generated Content:", generated_content)
                 try:
-                    extracted_info = json.loads(generated_content)  
-                    # print("Extracted Info:", extracted_info)  
+                    extracted_info = json.loads(generated_content)   
                 except json.JSONDecodeError as e:
-                    # print(f"JSONDecodeError: {e} | Cleaned Generated Content: {generated_content}")
                     extracted_info = {"error": "Invalid JSON response", "content": generated_content}
             else:
                 extracted_info = {"error": "No candidates found in response."}
@@ -149,16 +187,18 @@ class PolicyExtractor:
 
     def main(self):
         """Main function to run the policy extraction application."""
-        st.set_page_config("Insurance Policy Data Extraction")
-        st.header("Insurance Policy Scan:")
+        st.set_page_config("Insurance Policy JSON Generator")
+        st.header("Generate JSON from Insurance Policy Documents:")
         uploaded_files = st.file_uploader("Upload Policy Documents", type=["pdf", "docx", "txt", "pptx"], accept_multiple_files=True)
         if uploaded_files:
-            st.write("Extracting key components...")
+            st.write("Generating JSON...")
             raw_text = self.get_text_from_document(uploaded_files)
             chunks = self.get_text_chunks(raw_text)
             policy_info_dict = self.extract_policy_information(chunks)
-            st.write("Extracted Policy Information:")
-            st.json(policy_info_dict)
+            policy_info_json = json.dumps(policy_info_dict, indent=4)
+            st.write("Generated JSON:")
+            st.code(policy_info_json, language='json')
+            # st.json(policy_info_dict)
 
 if __name__ == "__main__":
     app = PolicyExtractor()
